@@ -440,7 +440,7 @@ nk_panel_end(struct nk_context *ctx)
             }
         } else {
             /* window mouse wheel scrolling */
-            scroll_has_scrolling = (window == ctx->active) && layout->has_scrolling;
+            scroll_has_scrolling = (window == ctx->active) && layout->has_scrolling && nk_input_is_mouse_hovering_rect(in, layout->bounds);
             if (in && (in->mouse.scroll_delta.y > 0 || in->mouse.scroll_delta.x > 0) && scroll_has_scrolling)
                 window->scrolled = nk_true;
             else window->scrolled = nk_false;
