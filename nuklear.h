@@ -20998,7 +20998,34 @@ nk_window_is_hovered(const struct nk_context *ctx)
         if (ctx->current->flags & NK_WINDOW_MINIMIZED) {
             actual_bounds.h = ctx->current->layout->header_height;
         }
-        return nk_input_is_mouse_hovering_rect(&ctx->input, actual_bounds);
+
+        if (!nk_input_is_mouse_hovering_rect(&ctx->input, actual_bounds))
+            return 0;
+#ifdef NK_HOVER_BLOCKED_BY_WINDOWS
+        // check whether blocked by other windows
+        struct nk_window *iter;
+        iter = ctx->current->next;
+
+        while (iter) {
+            if (!(iter->flags & NK_WINDOW_HIDDEN)) {
+                if (iter->popup.active && iter->popup.win && nk_input_is_mouse_hovering_rect(&ctx->input, iter->popup.win->bounds)) {
+                    return 0;
+                }
+                if (iter->flags & NK_WINDOW_MINIMIZED) {
+                    struct nk_rect header = iter->bounds;
+                    header.h = ctx->style.font->height + 2 * ctx->style.window.header.padding.y;
+                    if (nk_input_is_mouse_hovering_rect(&ctx->input, header)) {
+                        return 0;
+                    }
+                }
+                else if ( nk_input_is_mouse_hovering_rect(&ctx->input, iter->bounds) == 1) {
+                    return 0;
+                }
+            }
+            iter = iter->next;
+        }
+#endif
+        return 1;
     }
 }
 NK_API nk_bool
